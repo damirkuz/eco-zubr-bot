@@ -1,5 +1,7 @@
 # Eco Zubr Bot
 
+Презентация: https://disk.360.yandex.ru/i/MgaQwiw2G-aTsg
+
 Telegram бот на MAX Long Poll API с Java Spring Boot и PostgreSQL.
 
 ## Инструкция по запуску
