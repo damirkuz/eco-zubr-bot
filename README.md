@@ -1,207 +1,86 @@
 # Eco Zubr Bot
 
-Презентация: https://disk.360.yandex.ru/i/MgaQwiw2G-aTsg
+> Совместный проект с [@ZhenShenITIS](https://github.com/ZhenShenITIS).
 
-Telegram бот на MAX Long Poll API с Java Spring Boot и PostgreSQL.
+Чат-бот мессенджера MAX, который превращает эко-активизм в игру: пользователи находят мероприятия в своём городе, выполняют эко-задания, зарабатывают баллы и обменивают их на реальные награды.
 
-## Инструкция по запуску
+[Презентация проекта](https://disk.360.yandex.ru/i/MgaQwiw2G-aTsg)
 
-### 1. Клонируйте репозиторий
+## Описание
 
-git clone https://github.com/ZhenShenITIS/eco-zubr-bot.git
-
-cd eco-zubr-bot
-
-### 2. Создайте .env файл в корневой папке проекта
-
-cp .env.example .env
-
-### Отредактируйте \`.env\` и добавьте:
-
-- \`MAX_TOKEN\` — ваш токен MAX API
-- \`YANDEX_GEOCODER_TOKEN\` — ваш токен Яндекс Геокодера
-  Следующие аттрибуты можно оставить как есть(по умолчанию докер создаст базу данных eco_zybr20, пользователя userp, с паролем 12345. см. Dockerfile, init-db.sql. Если оставить следующие поля по умолчанию, то отдельно создавать бд не потребуется)
-- \DB_USER=userp (Пользователь бд)
-- DB_PASSWORD=12345 (Пароль пользователя)
-- DB_NAME=eco_zybr20 (имя бд)
-- DB_HOST=postgres (хост бд)
-- DB_PORT=5432 (порт бд)
-
-### Как получить токен YANDEX_GEOCODER_TOKEN:
-
-1) перейти по ссылке: https://developer.tech.yandex.ru/
-2) Нажать подключить api и выбрать Javascript Api и HTTP Геокодер
-3) Заполнить форму и нажать Отправить
-4) Скопировать предоставленный api токен и добавить в файл .env
-
-### 3. Собрать и запустить контейнеры
-
-docker-compose up -d --build
-
-### 4. Смотреть логи
-
-docker-compose logs -f app
-
-Бот запустится и подключится к PostgreSQL.
-
-### 5.1 Остановить
-
-docker-compose down
-
-### 5.2 Остановить и удалить бд:
-
-docker-compose down -v
-
-# Описание:
-
-# Eco Zubr Bot - Docker образ
-
-## Multi-stage сборка (две стадии)
-
-### Стадия 1: Builder (Компиляция)
-
-- Базовый образ: eclipse-temurin:21-jdk-jammy
-- Назначение: Компилировать Java приложение
-
-Этапы:
-1. Установить Git и Maven
-2. Клонировать и собрать библиотеку MAX Bot API Client
-3. Клонировать и собрать библиотеку MAX Bot SDK
-4. Скачать pom.xml и исходный код
-5. Скомпилировать: mvn clean package
-
-Результат: target/*.jar (скомпилированное приложение)
-
-### Стадия 2: Runtime (Финальный образ)
-
-Назначение: Запустить Java приложение
-
-Этапы:
-1. Скопировать скомпилированный JAR из стадии Builder
-2. Скопировать статические файлы (PNG изображения)
-3. Открыть порт 8080
-4. Установить переменные окружения
-5. Запустить: java -jar app.jar
-
-## Переменные окружения
-
-SPRING_DATASOURCE_URL=""
-SPRING_DATASOURCE_USERNAME=""
-SPRING_DATASOURCE_PASSWORD=""
-SPRING_JPA_HIBERNATE_DDL_AUTO=update
-
-MAX_TOKEN=""
-YANDEX_GEOCODER_TOKEN=""
-
-(Переопределяются docker-compose.yml во время запуска)
+«ЭкоЗубр» — виртуальный зверёк-компаньон, вокруг которого построена геймификация экологической активности. Бот работает на Long Poll API мессенджера MAX: принимает апдейты, ведёт конечный автомат состояний каждого пользователя и обрабатывает нажатия inline-кнопок на виртуальных потоках (Java 21 virtual threads). Контент (задания, события, награды, викторины) хранится в PostgreSQL и пополняется через админ-команду и автозаполнение БД из JSON.
 
 ## Возможности
 
-- Java 21 runtime (среда выполнения)
-- Spring Boot 3.5.7 приложение
-- Драйвер PostgreSQL включен
-- Long Poll бот для MAX API
-- Hibernate ORM с PostgreSQL
-- Lombok для генерации кода
+- **Эко-события по городу.** Пользователь отправляет геолокацию, бот определяет город через Яндекс-Геокодер и показывает список событий рядом.
+- **Задания с модерацией.** Пользователь берёт эко-задание, отправляет фото-доказательство выполнения, задание проходит модерацию и начисляет баллы.
+- **Магазин наград.** Баллы обмениваются на купоны и мерч; учёт остатков наград (закончилась — не продаётся).
+- **Виртуальный зверёк.** Питомец растёт по опыту, за ним нужно ухаживать (прогресс и «сердечки» на стадиях).
+- **Викторина об экологии.** Вопросы с вариантами ответов, сохранение ответов пользователей.
+- **Рейтинг участников.** Таблица лидеров по баллам.
+- **Рассылки.** Массовая отправка сообщений всем пользователям, в том числе по таймеру, с предварительной модерацией контента.
+- **Админ-функции.** Команда `/add_content` добавляет задания/события/награды из JSON с картинкой; при пустой БД контент заполняется автоматически из JSON-файлов.
+- **Профиль.** Баллы, статистика, смена города.
 
-# Eco Zubr Bot - Docker Compose конфигурация
+## Технологии
 
-## Версия: 3.8
+- Java 21 (виртуальные потоки для обработчиков апдейтов)
+- Spring Boot 3.5.7 (Web, Data JPA, Hibernate)
+- PostgreSQL (схема создаётся Hibernate `ddl-auto=update`, первичная инициализация — `init-db.sql`)
+- MAX Bot SDK `0.0.6-SNAPSHOT` и MAX Bot API Client (Long Poll API)
+- Lombok, Guava 33.3.1, org.json
+- Maven, Spotless (Palantir Java Format), Docker (multi-stage сборка), Docker Compose
 
-## Сервис 1: PostgreSQL (База данных)
+## Запуск
 
-### Основное
+### 1. Клонируйте репозиторий
 
-Образ: postgres:11-alpine
-Имя контейнера: eco-zubr-postgres
+```bash
+git clone https://github.com/damirkuz/eco-zubr-bot.git
+cd eco-zubr-bot
+```
 
-### Переменные окружения
+### 2. Создайте `.env` в корне проекта
 
-POSTGRES_USER: postgres - Администратор БД
+```bash
+cp .env.example .env
+```
 
-POSTGRES_PASSWORD: postgres - Пароль администратора
+Заполните переменные:
 
-POSTGRES_DB: postgres - Служебная БД (создаётся при запуске)
+- `MAX_TOKEN` — токен бота из MAX Bot Platform;
+- `YANDEX_GEOCODER_TOKEN` — ключ HTTP-Геокодера Яндекса ([получить](https://developer.tech.yandex.ru/): «Подключить API» → «HTTP Геокодер»);
+- `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_HOST`, `DB_PORT` — параметры БД. Значения по умолчанию из `.env.example` работают без ручной настройки: Docker Compose поднимет PostgreSQL и `init-db.sql` создаст пользователя и базу.
 
-### Volumes
+### 3. Соберите и запустите контейнеры
 
-postgres_data:/var/lib/postgresql/data - Сохраняет данные БД между перезагрузками контейнера
+```bash
+docker-compose up -d --build
+docker-compose logs -f app
+```
 
-./init-db.sql:/docker-entrypoint-initdb.d/init.sql -Копирует скрипт инициализации в контейнер. PostgreSQL автоматически выполнит его при первом запуске. Создаст пользователя userp и БД eco_zybr20
+### 4. Остановка
 
-### Проверка здоровья (Healthcheck)
+```bash
+docker-compose down      # остановить
+docker-compose down -v   # остановить и удалить данные БД
+```
 
-test: ["CMD-SHELL", "pg_isready -U postgres"] - проверяет: готова ли БД к подключениям?
+Локальная разработка без Docker: заполните `src/main/resources/application.properties` (шаблон — `application.properties.example`) и запустите `./mvnw spring-boot:run`.
 
-### Сеть
+## Структура проекта
 
-networks: app-network - подключен к сети app-network
-
-## Сервис 2: Spring Boot приложение (Бот)
-
-### Основное
-
-build: . - Собрать образ из Dockerfile в текущей папке
-
-container_name: eco-zubr-app - Имя контейнера
-
-### Переменные окружения (из .env)
-
-SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-SPRING_DATASOURCE_USERNAME: ${DB_USER}
-SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-
-SPRING_JPA_HIBERNATE_DDL_AUTO: update
-Hibernate автоматически создаёт/обновляет таблицы
-
-MAX_TOKEN: ${MAX_TOKEN}
-Токен MAX API (из .env)
-
-YANDEX_GEOCODER_TOKEN: ${YANDEX_GEOCODER_TOKEN}
-Токен Яндекс Геокодера (из .env)
-
-### Зависимости (depends_on)
-
-depends_on:
-postgres:
-condition: service_healthy
-
-## Volumes
-
-postgres_data:
-Именованный том для хранения данных БД
-Создаётся автоматически при первом запуске
-Сохраняет данные между перезагрузками
-
-Где хранятся?
-Linux/Mac: ~/.docker/volumes/eco-zubr-bot_postgres_data/_data/
-Windows: %LOCALAPPDATA%\Docker\volumes\eco-zubr-bot_postgres_data\_data\
-
-## Сеть (Networks)
-
-app-network:
-driver: bridge
-
-Сеть типа bridge (виртуальная сеть между контейнерами)
-
-## Порядок запуска
-
-1. docker-compose up -d --build
-
-2. Создаёт и запускает postgres контейнер
-   Выполняет init-db.sql
-   Создаёт userp и БД eco_zybr20
-   Ждёт пока healthcheck пройдёт
-
-3. Проверяет: postgres healthy? ДА
-   Можно запускать app
-
-4. Собирает Docker образ (из Dockerfile)
-   Компилирует Java код
-
-5. Запускает app контейнер
-   Читает переменные окружения из .env
-   Подключается к postgres
-   Стартует Spring Boot
-   Бот готов!
-
+```text
+src/main/java/itis/ecozubrbot/
+├── max/              ядро бота: Long Poll, команды, callbacks, состояния (FSM)
+│   ├── callbacks/    обработчики inline-кнопок (задания, события, магазин, зверёк…)
+│   ├── commands/     /menu, /help, /add_content
+│   └── states/       состояния пользователя (загрузка фото, геолокация, модерация…)
+├── services/         бизнес-логика: события, задания, награды, зверёк, рейтинг
+├── newsletter/       рассылки, в том числе по таймеру
+├── quiz/             викторина об экологии
+├── models/           JPA-сущности (User, Challenge, Event, Reward, Pet, Quiz…)
+├── repositories/     Spring Data JPA + in-memory реализации
+├── config/           конфигурация бота и команд
+└── fillsql/          автозаполнение БД контентом из JSON
+```
